@@ -1,0 +1,17 @@
+body {
+  font-family: 'Roboto', serif;
+}
+
+.wrapper {
+  margin: 0 auto;
+  min-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.keyboard {
+  max-width: 1200px;
+  width: 100%;
+}
