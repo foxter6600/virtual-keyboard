@@ -61,3 +61,7 @@ body {
 .space {
   width: 460px;
 }
+
+.key-pressed {
+  background-color: rgb(112, 111, 36);
+}
