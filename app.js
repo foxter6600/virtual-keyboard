@@ -19,6 +19,14 @@ document.body.insertAdjacentHTML(
 
 const keyboard = document.querySelector('.keyboard')
 
+// Lang
+let lang
+
+if (!localStorage.getItem('lang')) {
+  localStorage.setItem('lang', 'en')
+}
+lang = localStorage.getItem('lang')
+
 for (let i = 0; i < 64; i++) {
   const div = document.createElement('div')
   div.classList.add('key')
@@ -26,7 +34,20 @@ for (let i = 0; i < 64; i++) {
     div.classList.add(keyEvents[i].style)
   }
   div.setAttribute('id', i)
-  div.textContent = keyEvents[i].enKey
+  if (!localStorage.getItem('lang')) {
+    div.textContent = keyEvents[i].enKey
+  } else {
+    if (lang === 'en') {
+      div.textContent = keyEvents[i].enKey
+    } else if (lang === 'ru') {
+      if (keyEvents[i].ruKey) {
+        div.textContent = keyEvents[i].ruKey
+      } else {
+        div.textContent = keyEvents[i].enKey
+      }
+    }
+  }
+
   keyboard.append(div)
 }
 
@@ -40,10 +61,9 @@ window.addEventListener('keydown', function (e) {
 
 // Lang
 
-let lang = 'en'
-
 function updateKeyContent() {
-  // console.log(capsLock)
+  lang = localStorage.getItem('lang')
+
   for (let i = 0; i < 64; i++) {
     const key = document.getElementById(i)
     if (lang === 'en') {
@@ -52,22 +72,30 @@ function updateKeyContent() {
       } else {
         key.textContent = keyEvents[i].enKey
       }
-    } else {
+      // localStorage.setItem('lang', 'en')
+      // lang = localStorage.getItem('lang')
+    } else if (lang === 'ru') {
       if (capsLock && keyEvents[i].ruKeyCaps) {
         key.textContent = keyEvents[i].ruKeyCaps
       } else if (keyEvents[i].ruKey) {
         key.textContent = keyEvents[i].ruKey
+      } else {
+        key.textContent = keyEvents[i].enKey
       }
+      // localStorage.setItem('lang', 'ru')
+      // lang = localStorage.getItem('lang')
     }
   }
 }
 
 document.addEventListener('keydown', (e) => {
-  // console.log(e)
   if ((e.ctrlKey && e.code === 'AltLeft') || (e.altKey && e.code === 'ControlLeft')) {
-    lang === 'en' ? (lang = 'ru') : (lang = 'en')
-    // console.log(lang)
+    lang === 'en' ? localStorage.setItem('lang', 'ru') : localStorage.setItem('lang', 'en')
+
     updateKeyContent()
+    // if (capsLock) {
+    //   capsLockHandle()
+    // }
   }
 })
 
@@ -76,16 +104,26 @@ let isShiftPressed = false
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Shift') {
-    isShiftPressed = true
-    shiftHandle()
+    if (capsLock) {
+      isShiftPressed = false
+      shiftHandle()
+    } else {
+      isShiftPressed = true
+      shiftHandle()
+    }
   }
 })
 
 document.addEventListener('keyup', (e) => {
   if (e.key === 'Shift') {
-    isShiftPressed = false
-    shiftHandle()
-    isShiftPressed = false
+    if (capsLock) {
+      isShiftPressed = true
+      shiftHandle()
+    } else {
+      isShiftPressed = false
+      shiftHandle()
+      isShiftPressed = false
+    }
   }
 })
 
@@ -106,9 +144,15 @@ function shiftHandle() {
           key.textContent = keyEvents[i].ruKeyShift
         } else if (keyEvents[i].ruKey) {
           key.textContent = keyEvents[i].ruKey
+        } else {
+          key.textContent = keyEvents[i].enKey
         }
       } else {
-        key.textContent = keyEvents[i].enKey
+        if (keyEvents[i].ruKey) {
+          key.textContent = keyEvents[i].ruKey
+        } else {
+          key.textContent = keyEvents[i].enKey
+        }
       }
     }
   }
@@ -122,7 +166,8 @@ function defaultLang() {
     if (lang === 'en') {
       key.textContent = keyEvents[i].enKey
     } else if (lang === 'ru') {
-      if (key.ruKey) {
+      if (keyEvents[i].ruKey) {
+        console.log('ru')
         key.textContent = keyEvents[i].ruKey
       } else {
         key.textContent = keyEvents[i].enKey
@@ -141,6 +186,7 @@ document.addEventListener('keydown', (e) => {
     if (capsLock) {
       capsLockHandle()
     } else {
+      console.log(1)
       defaultLang()
     }
   }
@@ -173,18 +219,25 @@ function capsLockHandle() {
 const keys = document.querySelectorAll('.key')
 
 document.addEventListener('keydown', (e) => {
-  for (let i = 0; i < keyCode.length; i++) {
-    if (keyCode[i] === e.code) {
-      keys[i].classList.add('key-pressed')
+  console.log(e)
+  if (e.code === 'CapsLock') {
+    keys['29'].classList.toggle('key-pressed')
+  } else {
+    for (let i = 0; i < keyCode.length; i++) {
+      if (keyCode[i] === e.code) {
+        keys[i].classList.add('key-pressed')
+      }
     }
   }
 })
 
 document.addEventListener('keyup', (e) => {
-  for (let i = 0; i < keyCode.length; i++) {
-    if (keyCode[i] === e.code) {
-      if (keys[i].classList.contains('key-pressed')) {
-        keys[i].classList.remove('key-pressed')
+  if (e.code !== 'CapsLock') {
+    for (let i = 0; i < keyCode.length; i++) {
+      if (keyCode[i] === e.code) {
+        if (keys[i].classList.contains('key-pressed')) {
+          keys[i].classList.remove('key-pressed')
+        }
       }
     }
   }
