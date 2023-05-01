@@ -232,8 +232,6 @@ document.addEventListener('keyup', (e) => {
   }
 })
 
-// Textarea
-
 //Mouse
 
 keyboard.addEventListener('mousedown', (e) => {
