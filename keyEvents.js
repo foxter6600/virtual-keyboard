@@ -519,7 +519,7 @@ export const keyEvents = {
 //     console.log(keyEvents)
 //   }
 // })
-export const keyCode = [
+export const keyCodes = [
   'Backquote',
   'Digit1',
   'Digit2',

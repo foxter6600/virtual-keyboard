@@ -1,5 +1,5 @@
 import { keyEvents } from './keyEvents.js'
-import { keyCode } from './keyEvents.js'
+import { keyCodes } from './keyEvents.js'
 
 document.body.insertAdjacentHTML(
   'afterbegin',
@@ -7,8 +7,8 @@ document.body.insertAdjacentHTML(
   <header class="header">
   <h1>RSS Virtual Keyboard</h1></header>
   <main class="main">
-  <textarea cols="124" rows="20"></textarea>
-  <div class="keyboard"></div>
+  <textarea class='textarea' cols="124" rows="20"></textarea>
+  <div class="keyboard" tabindex='0fdf'></div>
   </main>
   <footer class="footer">
     <p>Клавиатура создана в операционной системе Windows</p>
@@ -18,6 +18,7 @@ document.body.insertAdjacentHTML(
 )
 
 const keyboard = document.querySelector('.keyboard')
+const textarea = document.querySelector('.textarea')
 
 // Lang
 let lang
@@ -29,6 +30,7 @@ lang = localStorage.getItem('lang')
 
 for (let i = 0; i < 64; i++) {
   const div = document.createElement('div')
+  div.setAttribute('tabindex', '1')
   div.classList.add('key')
   if (keyEvents[i].style) {
     div.classList.add(keyEvents[i].style)
@@ -54,9 +56,7 @@ for (let i = 0; i < 64; i++) {
 // PreventDefault
 
 window.addEventListener('keydown', function (e) {
-  // if (e.altKey) {
   e.preventDefault()
-  // }
 })
 
 // Lang
@@ -72,8 +72,6 @@ function updateKeyContent() {
       } else {
         key.textContent = keyEvents[i].enKey
       }
-      // localStorage.setItem('lang', 'en')
-      // lang = localStorage.getItem('lang')
     } else if (lang === 'ru') {
       if (capsLock && keyEvents[i].ruKeyCaps) {
         key.textContent = keyEvents[i].ruKeyCaps
@@ -82,8 +80,6 @@ function updateKeyContent() {
       } else {
         key.textContent = keyEvents[i].enKey
       }
-      // localStorage.setItem('lang', 'ru')
-      // lang = localStorage.getItem('lang')
     }
   }
 }
@@ -91,11 +87,7 @@ function updateKeyContent() {
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey && e.code === 'AltLeft') || (e.altKey && e.code === 'ControlLeft')) {
     lang === 'en' ? localStorage.setItem('lang', 'ru') : localStorage.setItem('lang', 'en')
-
     updateKeyContent()
-    // if (capsLock) {
-    //   capsLockHandle()
-    // }
   }
 })
 
@@ -167,7 +159,6 @@ function defaultLang() {
       key.textContent = keyEvents[i].enKey
     } else if (lang === 'ru') {
       if (keyEvents[i].ruKey) {
-        console.log('ru')
         key.textContent = keyEvents[i].ruKey
       } else {
         key.textContent = keyEvents[i].enKey
@@ -186,7 +177,6 @@ document.addEventListener('keydown', (e) => {
     if (capsLock) {
       capsLockHandle()
     } else {
-      console.log(1)
       defaultLang()
     }
   }
@@ -219,12 +209,11 @@ function capsLockHandle() {
 const keys = document.querySelectorAll('.key')
 
 document.addEventListener('keydown', (e) => {
-  console.log(e)
   if (e.code === 'CapsLock') {
     keys['29'].classList.toggle('key-pressed')
   } else {
-    for (let i = 0; i < keyCode.length; i++) {
-      if (keyCode[i] === e.code) {
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (keyCodes[i] === e.code) {
         keys[i].classList.add('key-pressed')
       }
     }
@@ -233,8 +222,8 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('keyup', (e) => {
   if (e.code !== 'CapsLock') {
-    for (let i = 0; i < keyCode.length; i++) {
-      if (keyCode[i] === e.code) {
+    for (let i = 0; i < keyCodes.length; i++) {
+      if (keyCodes[i] === e.code) {
         if (keys[i].classList.contains('key-pressed')) {
           keys[i].classList.remove('key-pressed')
         }
@@ -243,44 +232,145 @@ document.addEventListener('keyup', (e) => {
   }
 })
 
-// console.log(keyEvents)
-// document.addEventListener('keydown', function (event) {
-// keyEvents[event.code] = { enKey: event.key }
-// console.log(keyEvents)
-// if (event.shiftKey && event.code !== 'ShiftLeft' && event.code !== 'ShiftRight') {
-//   keyEvents[event.code].ruKeyShift = event.key
-//   console.log(keyEvents)
-// }
-// keyEvents[event.code].ruKey = event.key
-// console.log(keyEvents)
-//   if (event.shiftKey && event.code !== 'ShiftLeft' && event.code !== 'ShiftRight') {
-//     keyEvents[event.code].enKeyShift = event.key
-//     console.log(keyEvents)
-//   }
-// keyEvents[event.code].ruKey = event.key
-// console.log(keyEvents)
+// Textarea
 
-// CapsLock
-//   let capsLockOn = event.getModifierState('CapsLock')
+//Mouse
 
-//   if (capsLockOn) {
-//     keyEvents[event.code].ruKeyCaps = event.key
-//     console.log(keyEvents)
-//   }
-// })
+keyboard.addEventListener('mousedown', (e) => {
+  const key = e.target
+  if (key.classList.contains('key')) {
+    key.classList.add('key-pressed')
+    if (
+      !key.classList.contains('static') &&
+      !key.classList.contains('static_mid') &&
+      !key.classList.contains('static_big') &&
+      !key.classList.contains('static_tab')
+    ) {
+      const keyInnerHTML = key.innerHTML
+      const cursorPositionStart = textarea.selectionStart
+      const cursorPositionEnd = textarea.selectionEnd
+      if (cursorPositionStart === textarea.value.length) {
+        textarea.value = textarea.value + keyInnerHTML
+      } else {
+        const stringEnd = textarea.value.substring(cursorPositionEnd)
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart) + key.innerHTML + stringEnd
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart + 1
+      }
+    } else if (key.id === '13') {
+      const cursorPositionStart = textarea.selectionStart
+      const cursorPositionEnd = textarea.selectionEnd
+      let diff = cursorPositionEnd - cursorPositionStart
+      if (diff === 0 && cursorPositionStart > 0) {
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart - 1) +
+          textarea.value.substring(cursorPositionEnd)
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart - 1
+      } else {
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart) +
+          textarea.value.substring(cursorPositionEnd)
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+      }
+    } else if (key.id === '14') {
+      const cursorPositionStart = textarea.selectionStart
+      const cursorPositionEnd = textarea.selectionEnd
+      textarea.value =
+        textarea.value.substring(0, cursorPositionStart) +
+        `    ` +
+        textarea.value.substring(cursorPositionEnd)
+      textarea.selectionStart = textarea.selectionEnd = cursorPositionStart + 4
+    } else if (key.id === '28') {
+      const cursorPositionStart = textarea.selectionStart
+      const cursorPositionEnd = textarea.selectionEnd
+      let diff = cursorPositionEnd - cursorPositionStart
+      if (diff === 0 && cursorPositionEnd < textarea.value.length) {
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart) +
+          textarea.value.substring(cursorPositionEnd + 1)
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+      } else {
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart) +
+          textarea.value.substring(cursorPositionEnd)
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+      }
+    } else if (key.id === '41') {
+      textarea.value = textarea.value + `\n`
+    }
+  }
 
-// document.addEventListener('keydown', (e) =>
-//   keyboardData.push({
-//     key: event.key,
-//     code: event.code,
-//   })
-// console.log(e)
-// )
-// document.onkeydown = (e) => {
-// console.log(e)
-// keyboardData.push(e)
-// console.log(keyboardData)
+  keyboard.addEventListener('mouseup', (e) => {
+    key.classList.remove('key-pressed')
+    textarea.focus()
+  })
+})
 
-// console.log(keyboardData)
-// }
-// document.addEventListener('keydown', (e) => console.log(e))
+//Keyboard
+
+document.addEventListener('keydown', (e) => {
+  for (let i = 0; i < keyCodes.length; i++) {
+    if (keyCodes[i] === e.code) {
+      const key = document.getElementById(i)
+      if (
+        !key.classList.contains('static') &&
+        !key.classList.contains('static_mid') &&
+        !key.classList.contains('static_big') &&
+        !key.classList.contains('static_tab')
+      ) {
+        const keyInnerHTML = key.innerHTML
+        const cursorPositionStart = textarea.selectionStart
+        const cursorPositionEnd = textarea.selectionEnd
+        if (cursorPositionStart === textarea.value.length) {
+          textarea.value = textarea.value + keyInnerHTML
+        } else {
+          const stringEnd = textarea.value.substring(cursorPositionEnd)
+          textarea.value =
+            textarea.value.substring(0, cursorPositionStart) + key.innerHTML + stringEnd
+          textarea.selectionStart = textarea.selectionEnd = cursorPositionStart + 1
+        }
+      } else if (key.id === '13') {
+        const cursorPositionStart = textarea.selectionStart
+        const cursorPositionEnd = textarea.selectionEnd
+        let diff = cursorPositionEnd - cursorPositionStart
+        if (diff === 0 && cursorPositionStart > 0) {
+          textarea.value =
+            textarea.value.substring(0, cursorPositionStart - 1) +
+            textarea.value.substring(cursorPositionEnd)
+          textarea.selectionStart = textarea.selectionEnd = cursorPositionStart - 1
+        } else {
+          textarea.value =
+            textarea.value.substring(0, cursorPositionStart) +
+            textarea.value.substring(cursorPositionEnd)
+          textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+        }
+      } else if (key.id === '14') {
+        const cursorPositionStart = textarea.selectionStart
+        const cursorPositionEnd = textarea.selectionEnd
+        textarea.value =
+          textarea.value.substring(0, cursorPositionStart) +
+          `    ` +
+          textarea.value.substring(cursorPositionEnd)
+        textarea.selectionStart = textarea.selectionEnd = cursorPositionStart + 4
+      } else if (key.id === '28') {
+        const cursorPositionStart = textarea.selectionStart
+        const cursorPositionEnd = textarea.selectionEnd
+        let diff = cursorPositionEnd - cursorPositionStart
+        if (diff === 0 && cursorPositionEnd < textarea.value.length) {
+          textarea.value =
+            textarea.value.substring(0, cursorPositionStart) +
+            textarea.value.substring(cursorPositionEnd + 1)
+          textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+        } else {
+          textarea.value =
+            textarea.value.substring(0, cursorPositionStart) +
+            textarea.value.substring(cursorPositionEnd)
+          textarea.selectionStart = textarea.selectionEnd = cursorPositionStart
+        }
+      } else if (key.id === '41') {
+        textarea.value = textarea.value + `\n`
+      }
+    }
+  }
+  textarea.focus()
+})
